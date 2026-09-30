@@ -70,9 +70,24 @@ def main() -> int:
     print(f"  output identical after merge: {np.allclose(before, after)} "
           f"(adapter folded into the base weight)")
 
+    rule("QLoRA & QDoRA — quantized base + adapter")
+    from app.dora import make_quantized_base, train_dora
+    from app.quant import QuantizedBase, quantization_error
+    base2 = BaseModel(in_dim=6, out_dim=3, seed=42)
+    W0 = base2.layer.W0
+    qb = QuantizedBase(W0)
+    print(f"  int8 base: {QuantizedBase.bytes_full(W0)}B -> {qb.bytes_stored()}B "
+          f"(quant error {quantization_error(W0):.2e})")
+    dom = make_domain("billing", seed=1); tr, _ = split(dom)
+    Wq = make_quantized_base(W0)
+    _, ql = train_adapter(Wq, tr["X"], tr["Y"], config=LoRAConfig(r=4, alpha=8.0), steps=300)
+    _, qd = train_dora(Wq, tr["X"], tr["Y"], config=LoRAConfig(r=4, alpha=8.0), steps=120, lr=0.1)
+    print(f"  QLoRA (LoRA on quantized base): loss {ql[0]:.3f} -> {ql[-1]:.4f}")
+    print(f"  QDoRA (DoRA on quantized base): loss {qd[0]:.3f} -> {qd[-1]:.4f}")
+
     rule("Done")
-    print("All offline, NumPy-only. Swap the synthetic domains for a real dataset,")
-    print("or the base for an open LLM's projections, without changing the registry/serving.")
+    print("All offline, NumPy-only. Adapter variants: LoRA / QLoRA / DoRA / QDoRA.")
+    print("Swap the base for an open LLM's projections without changing registry/serving.")
     return 0
 
 

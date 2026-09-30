@@ -5,7 +5,7 @@
 **A from-scratch toolkit for self-hosted LLM apps: LoRA fine-tuning + a grounded RAG retrieval stack.**
 
 Two halves of a production GenAI system, implemented from first principles and dependency-light so every idea is inspectable and unit-testable offline on CPU:
-**(1) LoRA** — the real low-rank math, an adapter registry, per-request hot-swapping, and merging.
+**(1) Fine-tuning** — the real low-rank math for **LoRA / QLoRA / DoRA / QDoRA**, an adapter registry, per-request hot-swapping, and merging.
 **(2) RAG** — a wiki-style chunk index, HyDE, BM25 reranking, RRF fusion, a scope-gate decision layer, an eval harness, and an RSI-style self-improvement loop.
 
 [![CI](https://github.com/Naveenkumaar/loraforge/actions/workflows/ci.yml/badge.svg)](https://github.com/Naveenkumaar/loraforge/actions/workflows/ci.yml)
@@ -96,6 +96,21 @@ Everything mirrors production LoRA serving; only the matrices are small.
 - The adapter is **<2% of the base** at realistic layer sizes.
 
 ---
+
+## Adapter variants
+
+Four points on the same design — freeze the base, train a small adapter — each a
+standard published technique, implemented from scratch:
+
+| Variant | Base | Adapter | Idea |
+|---------|------|---------|------|
+| **LoRA** | full precision, frozen | `A`,`B` low-rank | `W₀ + (α/r)·BA` (`app/lora.py`) |
+| **QLoRA** | **quantized** (int8 here; NF4 in prod), frozen | `A`,`B` | train the adapter on a memory-cheap lossy base (`app/quant.py`) |
+| **DoRA** | full precision, frozen | `A`,`B` + **magnitude** `m` | decompose into magnitude × direction; adapt direction, learn magnitude (`app/dora.py`) |
+| **QDoRA** | **quantized**, frozen | `A`,`B` + `m` | DoRA on a quantized base |
+
+`scripts/demo.py` trains and compares all four offline. Registry, hot-swap, and
+merge work the same for each.
 
 ## Swapping in a real model
 
