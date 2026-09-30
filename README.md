@@ -2,9 +2,11 @@
 
 # ⊹ loraforge
 
-**Fine-tune a self-hosted model with LoRA, then serve one base model with many hot-swappable adapters.**
+**A from-scratch toolkit for self-hosted LLM apps: LoRA fine-tuning + a grounded RAG retrieval stack.**
 
-A from-scratch, dependency-light implementation of **Low-Rank Adaptation** — the real math, an adapter registry, per-request hot-swapping, and adapter merging — that runs fully offline on CPU.
+Two halves of a production GenAI system, implemented from first principles and dependency-light so every idea is inspectable and unit-testable offline on CPU:
+**(1) LoRA** — the real low-rank math, an adapter registry, per-request hot-swapping, and merging.
+**(2) RAG** — a wiki-style chunk index, HyDE, BM25 reranking, RRF fusion, a scope-gate decision layer, an eval harness, and an RSI-style self-improvement loop.
 
 [![CI](https://github.com/Naveenkumaar/loraforge/actions/workflows/ci.yml/badge.svg)](https://github.com/Naveenkumaar/loraforge/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
@@ -46,8 +48,11 @@ Runs **offline on CPU** — NumPy only.
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
-# ⭐ one-command end-to-end demo (train adapters → hot-swap → merge)
+# ⭐ LoRA demo (train adapters → hot-swap → merge)
 .venv/bin/python scripts/demo.py
+
+# ⭐ RAG demo (scope-gate → HyDE → recall → rerank → eval → self-improve)
+.venv/bin/python scripts/rag_demo.py
 
 # run the tests
 .venv/bin/python -m pytest -q
@@ -102,8 +107,35 @@ the tests) honest and dependency-free.
 
 ---
 
+## The RAG stack (`app/rag/`)
+
+The second half — a grounded retrieval pipeline, each stage a standard, public
+technique implemented from scratch and swappable:
+
+| Module | What it is |
+|--------|-----------|
+| `corpus.py` | wiki-style articles → overlapping chunks (the retrieval unit) |
+| `index.py` | **TF-IDF cosine** first-stage recall (with stopword filtering) |
+| `rerank.py` | **BM25 (Okapi)** second-stage reranker — term saturation + length norm |
+| `hyde.py` | **HyDE** — write a hypothetical answer, retrieve with *that*, blended with the query |
+| `fusion.py` | **Reciprocal Rank Fusion** — combine lexical + dense rankings, score-free |
+| `scope.py` | **scope gate** — nearest-centroid routing that refuses out-of-domain queries before any LLM call |
+| `search.py` | the pipeline: (HyDE) → recall → rerank, every hit traceable to its chunk |
+| `evalharness.py` | **recall@k / MRR / nDCG** — cheap, no-LLM metrics to gate quality in CI |
+| `improve.py` | **RSI-style self-improvement** — hill-climb the retrieval policy on an eval set (MRR), deterministic |
+
+```bash
+.venv/bin/python scripts/rag_demo.py   # scope-gate → HyDE → recall → rerank → RRF → eval → self-improve
+```
+
+Same discipline as the LoRA half: pure-Python, offline, fully tested. Swap the
+built-in corpus for a real one, or the TF-IDF index for a dense embedding index,
+without touching the reranker, fusion, scope gate, eval, or self-improvement loop.
+
+---
+
 <div align="center">
 
-Built from scratch as a portfolio demonstration of LoRA fine-tuning &amp; adapter serving · [MIT License](LICENSE)
+Built from scratch as a portfolio demonstration of LoRA fine-tuning, adapter serving &amp; grounded RAG · [MIT License](LICENSE)
 
 </div>
