@@ -114,6 +114,8 @@ technique implemented from scratch and swappable:
 
 | Module | What it is |
 |--------|-----------|
+| `ingest.py` | **multimodal ingestion** — txt/markdown/CSV-TSV extractors emit one `ExtractedUnit` shape, preserve document order, and attach preceding text to tables as context (PDF/DOCX/OCR are a declared extension point) |
+| `provenance.py` | **provenance & versioning** — deterministic sha256 chunk ids, supersede-not-delete (audit survives), named immutable corpus releases |
 | `corpus.py` | wiki-style articles → overlapping chunks (the retrieval unit) |
 | `index.py` | **TF-IDF cosine** first-stage recall (with stopword filtering) |
 | `rerank.py` | **BM25 (Okapi)** second-stage reranker — term saturation + length norm |
