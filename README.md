@@ -43,20 +43,30 @@ with no reload.
 
 ## Quick start
 
-Runs **offline on CPU** — NumPy only.
+**No GPU, no API keys, no network** — pure Python + NumPy, runs offline on CPU.
+Requires Python 3.11+. Copy-paste the whole block:
 
 ```bash
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+# 1. get it
+git clone https://github.com/Naveenkumaar/loraforge.git
+cd loraforge
 
-# ⭐ LoRA demo (train adapters → hot-swap → merge)
-.venv/bin/python scripts/demo.py
+# 2. set up an isolated environment
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
 
-# ⭐ RAG demo (scope-gate → HyDE → recall → rerank → eval → self-improve)
-.venv/bin/python scripts/rag_demo.py
-
-# run the tests
+# 3. run the tests (should print "44 passed")
 .venv/bin/python -m pytest -q
+
+# 4. see it work — two self-contained demos
+.venv/bin/python scripts/demo.py       # LoRA / QLoRA / DoRA / QDoRA: train → hot-swap → merge
+.venv/bin/python scripts/rag_demo.py   # RAG: scope-gate → HyDE → recall → rerank → RRF → eval → self-improve
 ```
+
+That's the whole thing. No configuration, no data to download — the corpus,
+models, and datasets are all built in and synthetic.
+
+> On Windows use `.venv\Scripts\python` instead of `.venv/bin/python`.
 
 ---
 
