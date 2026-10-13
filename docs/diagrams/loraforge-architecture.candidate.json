@@ -1,0 +1,437 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "loraforge — Architecture",
+    "subtitle": "Two halves on one stack: a grounded RAG pipeline for answering, and LoRA/DoRA/QLoRA adapters for fine-tuning. New here? Read the cards.",
+    "output": "loraforge-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/Naveenkumaar/loraforge.git",
+      "revision": "bc5d40f005e8b50803d7c297fa8a24ccc3e1f532",
+      "link_mode": "local-only"
+    },
+    "legend": {
+      "mode": "all",
+      "entries": {
+        "frontend": {
+          "label": "Frontend: a screen a person uses"
+        },
+        "backend": {
+          "label": "Backend: service/library code doing the work"
+        },
+        "database": {
+          "label": "Datastore / index: where data is kept"
+        },
+        "security": {
+          "label": "Gate/control: a check that protects or decides"
+        },
+        "external": {
+          "label": "External: a person or model"
+        }
+      }
+    }
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      40,
+      40
+    ],
+    "cols": 5,
+    "gapX": 74,
+    "gapY": 66,
+    "cellW": 140,
+    "cellH": 60
+  },
+  "components": [
+    {
+      "id": "user",
+      "type": "external",
+      "label": "User / caller",
+      "sublabel": "asks a question",
+      "row": 0,
+      "col": 0
+    },
+    {
+      "id": "serve",
+      "type": "backend",
+      "label": "Serve",
+      "sublabel": "answer a query",
+      "row": 0,
+      "col": 2,
+      "sources": [
+        {
+          "path": "app/serve.py",
+          "line": 16,
+          "label": "serve"
+        }
+      ]
+    },
+    {
+      "id": "model",
+      "type": "backend",
+      "label": "Model",
+      "sublabel": "base + adapter",
+      "row": 1,
+      "col": 1,
+      "sources": [
+        {
+          "path": "app/model.py",
+          "line": 14,
+          "label": "model"
+        }
+      ]
+    },
+    {
+      "id": "adapters",
+      "type": "backend",
+      "label": "Adapters",
+      "sublabel": "LoRA/DoRA/QLoRA",
+      "row": 1,
+      "col": 2,
+      "sources": [
+        {
+          "path": "app/lora.py",
+          "line": 25,
+          "label": "LoRA"
+        },
+        {
+          "path": "app/dora.py",
+          "line": 20,
+          "label": "DoRA"
+        },
+        {
+          "path": "app/quant.py",
+          "line": 17,
+          "label": "quantized (QLoRA)"
+        }
+      ]
+    },
+    {
+      "id": "train",
+      "type": "backend",
+      "label": "Train",
+      "sublabel": "fine-tune adapters",
+      "row": 1,
+      "col": 3,
+      "sources": [
+        {
+          "path": "app/train.py",
+          "line": 14,
+          "label": "train"
+        }
+      ]
+    },
+    {
+      "id": "registry",
+      "type": "backend",
+      "label": "Adapter registry",
+      "sublabel": "hot-swap",
+      "row": 1,
+      "col": 4,
+      "sources": [
+        {
+          "path": "app/registry.py",
+          "line": 19,
+          "label": "registry"
+        }
+      ]
+    },
+    {
+      "id": "scope",
+      "type": "security",
+      "label": "Scope gate",
+      "sublabel": "what may be seen",
+      "row": 2,
+      "col": 0,
+      "sources": [
+        {
+          "path": "app/rag/scope.py",
+          "line": 3,
+          "label": "scope"
+        }
+      ]
+    },
+    {
+      "id": "search",
+      "type": "backend",
+      "label": "Search",
+      "sublabel": "hybrid retrieval",
+      "row": 2,
+      "col": 1,
+      "sources": [
+        {
+          "path": "app/rag/search.py",
+          "line": 18,
+          "label": "search"
+        }
+      ]
+    },
+    {
+      "id": "retrieval",
+      "type": "backend",
+      "label": "Fuse + rerank",
+      "sublabel": "RRF+HyDE+rerank",
+      "row": 2,
+      "col": 2,
+      "sources": [
+        {
+          "path": "app/rag/fusion.py",
+          "line": 11,
+          "label": "RRF fusion"
+        },
+        {
+          "path": "app/rag/hyde.py",
+          "line": 18,
+          "label": "HyDE"
+        },
+        {
+          "path": "app/rag/rerank.py",
+          "line": 17,
+          "label": "rerank"
+        }
+      ]
+    },
+    {
+      "id": "index",
+      "type": "database",
+      "label": "Index",
+      "sublabel": "chunk index",
+      "row": 2,
+      "col": 3,
+      "sources": [
+        {
+          "path": "app/rag/index.py",
+          "line": 27,
+          "label": "index"
+        }
+      ]
+    },
+    {
+      "id": "eval",
+      "type": "backend",
+      "label": "Eval harness",
+      "sublabel": "measure quality",
+      "row": 2,
+      "col": 4,
+      "sources": [
+        {
+          "path": "app/rag/evalharness.py",
+          "line": 15,
+          "label": "evalharness"
+        }
+      ]
+    },
+    {
+      "id": "ingest",
+      "type": "backend",
+      "label": "Ingest",
+      "sublabel": "build the corpus",
+      "row": 3,
+      "col": 1,
+      "sources": [
+        {
+          "path": "app/rag/ingest.py",
+          "line": 24,
+          "label": "ingest"
+        }
+      ]
+    },
+    {
+      "id": "corpus",
+      "type": "database",
+      "label": "Corpus",
+      "sublabel": "source documents",
+      "row": 3,
+      "col": 2,
+      "sources": [
+        {
+          "path": "app/rag/corpus.py",
+          "line": 55,
+          "label": "corpus"
+        }
+      ]
+    },
+    {
+      "id": "prov",
+      "type": "backend",
+      "label": "Provenance",
+      "sublabel": "versioning",
+      "row": 3,
+      "col": 3,
+      "sources": [
+        {
+          "path": "app/rag/provenance.py",
+          "line": 15,
+          "label": "provenance"
+        }
+      ]
+    },
+    {
+      "id": "improve",
+      "type": "backend",
+      "label": "Self-improve",
+      "sublabel": "RSI loop",
+      "row": 3,
+      "col": 4,
+      "sources": [
+        {
+          "path": "app/rag/improve.py",
+          "line": 22,
+          "label": "improve"
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "e-q",
+      "from": "user",
+      "to": "serve",
+      "label": "query",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e-gen",
+      "from": "serve",
+      "to": "model",
+      "label": "generate",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e-ad",
+      "from": "model",
+      "to": "adapters",
+      "label": "load adapter"
+    },
+    {
+      "id": "e-reg",
+      "from": "serve",
+      "to": "registry",
+      "label": "pick adapter",
+      "variant": "dashed"
+    },
+    {
+      "id": "e-sc",
+      "from": "serve",
+      "to": "scope",
+      "label": "scope gate",
+      "variant": "security"
+    },
+    {
+      "id": "e-se",
+      "from": "serve",
+      "to": "search",
+      "label": "retrieve",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e-rt",
+      "from": "search",
+      "to": "retrieval",
+      "label": "fuse+rerank"
+    },
+    {
+      "id": "e-ix",
+      "from": "search",
+      "to": "index",
+      "label": "lookup"
+    },
+    {
+      "id": "e-in",
+      "from": "ingest",
+      "to": "index",
+      "label": "build",
+      "variant": "dashed"
+    },
+    {
+      "id": "e-co",
+      "from": "ingest",
+      "to": "corpus",
+      "label": "read"
+    },
+    {
+      "id": "e-pv",
+      "from": "corpus",
+      "to": "prov",
+      "label": "version",
+      "variant": "dashed"
+    },
+    {
+      "id": "e-tr",
+      "from": "train",
+      "to": "adapters",
+      "label": "produce"
+    },
+    {
+      "id": "e-trg",
+      "from": "train",
+      "to": "registry",
+      "label": "register",
+      "variant": "dashed"
+    },
+    {
+      "id": "e-ev",
+      "from": "eval",
+      "to": "serve",
+      "label": "measure",
+      "variant": "dashed"
+    },
+    {
+      "id": "e-im",
+      "from": "improve",
+      "to": "eval",
+      "label": "RSI",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "How to read this diagram",
+      "items": [
+        "Each box is a part of the system; colour = what kind (see the legend top-right).",
+        "The top-right cluster is fine-tuning (adapters, train, registry); the lower area is the RAG pipeline.",
+        "An arrow means 'talks to'; dashed = background/occasional. Click a box's SRC badge to see the code."
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "Complete code map (every module)",
+      "items": [
+        "app/serve.py - answers a query end to end (retrieve then generate).",
+        "app/model.py - loads the base model and attaches an adapter.",
+        "app/lora.py / dora.py / quant.py - the LoRA, DoRA and quantized (QLoRA) adapter variants.",
+        "app/train.py - fine-tunes an adapter; app/registry.py - stores and hot-swaps adapters.",
+        "app/tasks.py - the task definitions training/eval use.",
+        "app/rag/ingest.py + corpus.py - read source documents and build the corpus.",
+        "app/rag/index.py - the chunk index; app/rag/search.py - hybrid retrieval over it.",
+        "app/rag/fusion.py (RRF) + hyde.py + rerank.py - combine and re-rank candidates.",
+        "app/rag/scope.py - the scope gate (what a caller may retrieve).",
+        "app/rag/provenance.py - corpus versioning; app/rag/evalharness.py - quality measurement.",
+        "app/rag/improve.py - a self-improvement (RSI) loop over the eval results."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Guided tour - answering a question",
+      "items": [
+        "1. A user asks a question; serve runs the scope gate.",
+        "2. Search retrieves candidates from the index (hybrid), then fusion + HyDE + rerank pick the best passages.",
+        "3. The model generates an answer from those passages, optionally through a fine-tuned adapter.",
+        "4. Separately: ingest builds the corpus/index; train produces adapters into the registry; eval + improve close the loop."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Why it is built this way",
+      "items": [
+        "Retrieve first, then generate: the answer is grounded in real passages, not the model's memory.",
+        "Adapters (LoRA/DoRA/QLoRA) fine-tune cheaply and hot-swap, so one base model serves many behaviours.",
+        "The scope gate decides what a caller may retrieve, independent of the model.",
+        "Provenance versions the corpus so an answer can be traced to the documents it came from."
+      ]
+    }
+  ]
+}

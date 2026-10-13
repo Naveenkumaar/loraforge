@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "loraforge — Answering a query (sequence)",
+    "subtitle": "One question answered end to end: scope -> retrieve -> rerank -> generate. Click any box to see the code.",
+    "output": "loraforge-flow.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/Naveenkumaar/loraforge.git",
+      "revision": "bc5d40f005e8b50803d7c297fa8a24ccc3e1f532",
+      "link_mode": "local-only"
+    },
+    "legend": {
+      "mode": "all",
+      "entries": {
+        "default": {
+          "label": "a normal call"
+        },
+        "emphasis": {
+          "label": "the main path"
+        },
+        "security": {
+          "label": "a gate/check"
+        },
+        "return": {
+          "label": "a response coming back"
+        }
+      }
+    }
+  },
+  "participants": [
+    {
+      "id": "user",
+      "type": "external",
+      "label": "User",
+      "sublabel": "question"
+    },
+    {
+      "id": "serve",
+      "type": "backend",
+      "label": "Serve",
+      "sublabel": "answer",
+      "sources": [
+        {
+          "path": "app/serve.py",
+          "line": 16,
+          "label": "serve"
+        }
+      ]
+    },
+    {
+      "id": "scope",
+      "type": "backend",
+      "label": "Scope",
+      "sublabel": "gate",
+      "sources": [
+        {
+          "path": "app/rag/scope.py",
+          "line": 3,
+          "label": "scope"
+        }
+      ]
+    },
+    {
+      "id": "search",
+      "type": "backend",
+      "label": "Search",
+      "sublabel": "hybrid",
+      "sources": [
+        {
+          "path": "app/rag/search.py",
+          "line": 18,
+          "label": "search"
+        }
+      ]
+    },
+    {
+      "id": "index",
+      "type": "database",
+      "label": "Index",
+      "sublabel": "chunks",
+      "sources": [
+        {
+          "path": "app/rag/index.py",
+          "line": 27,
+          "label": "index"
+        }
+      ]
+    },
+    {
+      "id": "rerank",
+      "type": "backend",
+      "label": "Rerank",
+      "sublabel": "RRF+HyDE",
+      "sources": [
+        {
+          "path": "app/rag/fusion.py",
+          "line": 11,
+          "label": "RRF"
+        },
+        {
+          "path": "app/rag/rerank.py",
+          "line": 17,
+          "label": "rerank"
+        }
+      ]
+    },
+    {
+      "id": "model",
+      "type": "backend",
+      "label": "Model",
+      "sublabel": "+ adapter",
+      "sources": [
+        {
+          "path": "app/model.py",
+          "line": 14,
+          "label": "model"
+        },
+        {
+          "path": "app/lora.py",
+          "line": 25,
+          "label": "LoRA"
+        }
+      ]
+    }
+  ],
+  "messages": [
+    {
+      "id": "m1",
+      "from": "user",
+      "to": "serve",
+      "y": 160,
+      "label": "question",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m2",
+      "from": "serve",
+      "to": "scope",
+      "y": 212,
+      "label": "scope gate: what may be seen",
+      "variant": "security"
+    },
+    {
+      "id": "m3",
+      "from": "serve",
+      "to": "search",
+      "y": 264,
+      "label": "retrieve candidates",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m4",
+      "from": "search",
+      "to": "index",
+      "y": 316,
+      "label": "hybrid lookup"
+    },
+    {
+      "id": "m5",
+      "from": "index",
+      "to": "search",
+      "y": 368,
+      "label": "candidates",
+      "variant": "return"
+    },
+    {
+      "id": "m6",
+      "from": "search",
+      "to": "rerank",
+      "y": 420,
+      "label": "fuse + rerank"
+    },
+    {
+      "id": "m7",
+      "from": "rerank",
+      "to": "serve",
+      "y": 472,
+      "label": "top passages",
+      "variant": "return"
+    },
+    {
+      "id": "m8",
+      "from": "serve",
+      "to": "model",
+      "y": 524,
+      "label": "generate from passages (+ adapter)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m9",
+      "from": "model",
+      "to": "serve",
+      "y": 576,
+      "label": "answer",
+      "variant": "return"
+    },
+    {
+      "id": "m10",
+      "from": "serve",
+      "to": "user",
+      "y": 628,
+      "label": "answer + citations",
+      "variant": "return"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "How to read this diagram",
+      "items": [
+        "A sequence: time flows top to bottom. Each column is a part; each arrow is a call or a reply.",
+        "It follows ONE question end to end. A returning arrow is a response coming back.",
+        "Click a column's SRC badge to see the exact code."
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "Glossary (plain words)",
+      "items": [
+        "Scope gate - decides which documents a caller is allowed to retrieve.",
+        "Hybrid retrieval - combine keyword and vector search.",
+        "RRF - reciprocal-rank fusion: merge two ranked lists fairly.",
+        "HyDE - write a hypothetical answer first, then search with it (optional).",
+        "Adapter (LoRA/DoRA/QLoRA) - a small fine-tune layered on the base model."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Guided tour - one question",
+      "items": [
+        "1. The user asks; serve applies the scope gate.",
+        "2. Search does a hybrid lookup against the index; fusion + rerank pick the best passages.",
+        "3. The model generates an answer from those passages (optionally via a fine-tuned adapter).",
+        "4. The answer is returned with citations."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Why the gates exist",
+      "items": [
+        "Retrieve before generate, so the answer is grounded in real passages.",
+        "The scope gate stops a caller retrieving passages they may not see.",
+        "Rerank raises precision so the model sees the most relevant passages, not just the most similar."
+      ]
+    }
+  ]
+}
